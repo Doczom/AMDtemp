@@ -17,10 +17,10 @@ macro send_notify send_str{
   dd     PATH
   dd     0
 
-include '..\..\proc32.inc'
-include '..\..\macros.inc'
-include '..\..\KOSfuncs.inc'
-include '..\..\dll.inc'
+include 'proc32.inc'
+include 'macros.inc'
+include 'KOSfuncs.inc'
+include 'dll.inc'
 
 ; include 'parser.inc'    ; this modul does not work
 START:
