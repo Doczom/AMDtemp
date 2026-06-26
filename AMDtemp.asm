@@ -128,7 +128,7 @@ button:
         ; waking up the flow through the futex
         mov     byte[futex_cmd], 1  ; stop thread
         mcall   SF_FUTEX, SSF_WAKE, [futex_handle], 1
-        mcall   SF_SYS_MISC, SSF_SWITCH_TASK ; для того, чтобы сообщение пришло потоку с таймером
+        mcall   SF_SYS_MISC, SSF_SWITCH_TASK ; in order for the message to arrive to the thread with a timer
 
         ; switch text for button
         mov     dword[text_log_butt], _start_log
@@ -166,13 +166,13 @@ button:
         jnz     still
 
         mcall   SF_CREATE_THREAD, 1, thread_timer, thread_timer.stack
-        mcall   SF_SYS_MISC, SSF_SWITCH_TASK ; для того, чтобы сообщение пришло потоку с таймером
+        mcall   SF_SYS_MISC, SSF_SWITCH_TASK ; in order for the message to arrive to the thread with a timer
 @@:
         mov     byte[futex_cmd], 3  ; save_log  & exit
         mcall   SF_FUTEX, SSF_WAKE, [futex_handle], 1
         test    eax, eax
         jz      @b
-        mcall   SF_SYS_MISC, SSF_SWITCH_TASK ; для того, чтобы сообщение пришло потоку с таймером
+        mcall   SF_SYS_MISC, SSF_SWITCH_TASK ; in order for the message to arrive to the thread with a timer
         jmp     still
 
 align 4
@@ -216,12 +216,8 @@ draw:
         mov     edx, BTN_ID_SW_MODE
         mov     esi, [sc.work_button]
         mcall
+
         ; print char on button
-;;так как функция writeText не должна изменять регистры
-;;присвоения в регистры eax и ecx происходят только 1 раз
-;; Далее, так как текст выводится почти всегда с одинаковым
-;; смещением вниз(равным 15)  дынные(строки) имеют одинаковый
-;; размер , то используется инструкция add
         mov     eax, SF_DRAW_TEXT
         mov     ebx, 0x01000020
         mov     ecx, DRAW_TEXT_6x9x2
@@ -555,7 +551,7 @@ error_drv:
 exit:
         mov     byte[futex_cmd], 2
         mcall   SF_FUTEX, SSF_WAKE, [futex_handle], 1
-        mcall   SF_SYS_MISC, SSF_SWITCH_TASK ; для того, чтобы сообщение пришло потоку с таймером
+        mcall   SF_SYS_MISC, SSF_SWITCH_TASK ; in order for the message to arrive to the thread with a timer
         ; destroy futex
         mcall   SF_FUTEX, SSF_DESTROY, [futex_handle]
         mcall   SF_SYS_MISC, SSF_MEM_FREE, [log_ptr]
@@ -573,8 +569,6 @@ index_item:
 
 ;eax = int   value / 1000
 ;ebx = *str
-; из за конкретики данного прилажения(а именно измерение температуры проца), сомниваюсь
-; что потребуется больше 3 цифр на значение(ххх.ххх) так что будет костыль
 align 4
 int_to_str:
         push    ecx edx esi
@@ -737,9 +731,9 @@ Error_text  db '"Error load driver\nk10temp.sys was not found or is faulty " -td
 .load_lib:  db '"Error load library" -tdE',0
 
 _NA         db 'N/A',0
-_dot_and_C  db '.   ',0xC2,0xb0,'C',0x00 ; 8x16 UTF-8
-_down       db 0x1f,0x00          ; 6x9  CP866
-_up         db 0x1e,0x00          ; 6x9  CP866
+_dot_and_C  db '.   В°C',0x00   ; 8x16 UTF-8
+_down       db 0x1f,0x00        ; 6x9  CP866
+_up         db 0x1e,0x00        ; 6x9  CP866
 
 
 _Tctl       db 'Tctl: ',0
@@ -756,8 +750,8 @@ _Tccd6      db 'Tccd6:',0
 _Tccd7      db 'Tccd7:',0
 _Tccd8      db 'Tccd8:',0
 
-_start_log:     db 'start loging',0
-_stop_log:      db 'stop loging ',0
+_start_log:     db 'start logging',0
+_stop_log:      db 'stop logging',0
 _save_log:      db '  save log  ',0
 text_log_butt:  dd _start_log
 
